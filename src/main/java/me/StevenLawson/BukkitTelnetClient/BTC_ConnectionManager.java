@@ -19,6 +19,7 @@
 package me.StevenLawson.BukkitTelnetClient;
 
 import java.awt.Color;
+import java.awt.Toolkit;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
@@ -50,6 +51,7 @@ public class BTC_ConnectionManager
 
         btc.getBtnConnect().setEnabled(false);
         btc.getTxtServer().setEnabled(false);
+        btc.toggleComponents(false);
         btc.getBtnDisconnect().setEnabled(true);
 
         btc.writeToConsole(new BTC_ConsoleMessage("Connecting to " + hostname + ":" + port + "...", Color.RED));
@@ -58,10 +60,11 @@ public class BTC_ConnectionManager
         this.port = port;
         this.loginName = null;
         updateTitle(true);
+        BTC_MainPanel.setIconImage(BTC_MainPanel.getWindows()[0], "Connecting");
 
         startConnectThread();
     }
-
+    
     public void triggerConnect(final String hostnameAndPort)
     {
         final String[] parts = StringUtils.split(hostnameAndPort, ":");
@@ -112,11 +115,14 @@ public class BTC_ConnectionManager
         btc.getBtnDisconnect().setEnabled(false);
         btc.getBtnSend().setEnabled(false);
         btc.getTxtCommand().setEnabled(false);
+        btc.toggleComponents(false);
 
         loginName = null;
 
         updateTitle(false);
-
+        
+        BTC_MainPanel.setIconImage(BTC_MainPanel.getWindows()[0], "Disconnected");
+        
         btc.writeToConsole(new BTC_ConsoleMessage("Disconnected.", Color.RED));
     }
 
@@ -174,6 +180,7 @@ public class BTC_ConnectionManager
 
                 btc.getBtnSend().setEnabled(true);
                 btc.getTxtCommand().setEnabled(true);
+                btc.toggleComponents(true);
                 btc.getTxtCommand().requestFocusInWindow();
 
                 try (final BufferedReader reader = new BufferedReader(new InputStreamReader(telnetClient.getInputStream(), StandardCharsets.UTF_8)))
@@ -191,6 +198,7 @@ public class BTC_ConnectionManager
                             BTC_ConnectionManager.this.loginName = _loginName;
                             updateTitle(true);
                             sendDelayedCommand("telnet.enhanced", false, 100);
+                            sendDelayedCommand("telnet.enhancedplus", false, 100);
                         }
                         else
                         {
@@ -207,10 +215,14 @@ public class BTC_ConnectionManager
                             }
                             else
                             {
-                                final BTC_TelnetMessage message = new BTC_TelnetMessage(line);
-                                if (!message.skip())
+                                boolean isUsageMessage = BTC_UsageDecoder.checkForUsageMessage(line);
+                                if (!isUsageMessage)
                                 {
-                                    btc.writeToConsole(message);
+                                    final BTC_TelnetMessage message = new BTC_TelnetMessage(line);
+                                    if (!message.skip())
+                                    {
+                                        btc.writeToConsole(message);
+                                    }
                                 }
                             }
                         }
@@ -256,16 +268,16 @@ public class BTC_ConnectionManager
         {
             if (loginName == null)
             {
-                title = String.format("FreedomTelnetClient - %s - %s:%d", BukkitTelnetClient.VERSION_STRING, hostname, port);
+                title = String.format("ZeroTelnetClient - %s - %s:%d", BukkitTelnetClient.VERSION, hostname, port);
             }
             else
             {
-                title = String.format("FreedomTelnetClient - %s - %s@%s:%d", BukkitTelnetClient.VERSION_STRING, loginName, hostname, port);
+                title = String.format("ZeroTelnetClient - %s - %s@%s:%d", BukkitTelnetClient.VERSION, loginName, hostname, port);
             }
         }
         else
         {
-            title = String.format("FreedomTelnetClient - %s - Disconnected", BukkitTelnetClient.VERSION_STRING);
+            title = String.format("ZeroTelnetClient - %s - Disconnected", BukkitTelnetClient.VERSION);
         }
 
         mainPanel.setTitle(title);

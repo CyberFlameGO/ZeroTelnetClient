@@ -32,11 +32,19 @@ import org.xml.sax.SAXException;
 
 public class BTC_ConfigLoader
 {
-    private static final String SETTINGS_FILE = "ftc_settings.xml";
+    private static final String SETTINGS_FILE = "ztc_settings.xml";
 
     private final ServerEntry.ServerEntryList servers = new ServerEntry.ServerEntryList();
     private final PlayerCommandEntry.PlayerCommandEntryList playerCommands = new PlayerCommandEntry.PlayerCommandEntryList();
     private final FavoriteButtonEntry.FavoriteButtonEntryList favoriteButtons = new FavoriteButtonEntry.FavoriteButtonEntryList();
+    public final Themes themes = BukkitTelnetClient.themes;
+    public boolean filterIgnorePreprocessCommands = false;
+    public boolean filterIgnoreServerCommands = false;
+    public boolean filterShowChatOnly = false;
+    public boolean filterIgnoreWarnings = false;
+    public boolean filterIgnoreErrors = false;
+    public boolean filterShowAdminChatOnly = false;
+    public boolean filterIgnoreAsyncWorldEdit = false;
 
     public BTC_ConfigLoader()
     {
@@ -60,8 +68,6 @@ public class BTC_ConfigLoader
         if (settings.exists())
         {
             boolean loadError = loadXML(settings);
-
-            generateXML(settings);
 
             if (verbose)
             {
@@ -120,6 +126,8 @@ public class BTC_ConfigLoader
             rootElement.appendChild(this.servers.listToXML(doc));
             rootElement.appendChild(this.playerCommands.listToXML(doc));
             rootElement.appendChild(this.favoriteButtons.listToXML(doc));
+            rootElement.appendChild(themes.toXML(doc));
+            rootElement.appendChild(filtersToXML(doc));
 
             final Transformer transformer = TransformerFactory.newInstance().newTransformer();
             transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
@@ -135,6 +143,53 @@ public class BTC_ConfigLoader
         }
 
         return false;
+    }
+    
+    public Element filtersToXML(Document doc)
+    {
+        Element filters = doc.createElement("filters");
+        
+        Element ignorePreprocessCommands = doc.createElement("ignorePreprocessCommands");
+        ignorePreprocessCommands.appendChild(doc.createTextNode(String.valueOf(filterIgnorePreprocessCommands)));
+        filters.appendChild(ignorePreprocessCommands);
+        
+        Element ignoreServerCommands = doc.createElement("ignoreServerCommands");
+        ignoreServerCommands.appendChild(doc.createTextNode(String.valueOf(filterIgnoreServerCommands)));
+        filters.appendChild(ignoreServerCommands);
+        
+        Element showChatOnly = doc.createElement("showChatOnly");
+        showChatOnly.appendChild(doc.createTextNode(String.valueOf(filterShowChatOnly)));
+        filters.appendChild(showChatOnly);
+        
+        Element ignoreWarnings = doc.createElement("ignoreWarnings");
+        ignoreWarnings.appendChild(doc.createTextNode(String.valueOf(filterIgnoreWarnings)));
+        filters.appendChild(ignoreWarnings);
+        
+        Element ignoreErrors = doc.createElement("ignoreErrors");
+        ignoreErrors.appendChild(doc.createTextNode(String.valueOf(filterIgnoreErrors)));
+        filters.appendChild(ignoreErrors);
+        
+        Element showAdminChatOnly = doc.createElement("showAdminChatOnly");
+        showAdminChatOnly.appendChild(doc.createTextNode(String.valueOf(filterShowAdminChatOnly)));
+        filters.appendChild(showAdminChatOnly);
+        
+        Element ignoreAsyncWorldEdit = doc.createElement("ignoreAsyncWorldEdit");
+        ignoreAsyncWorldEdit.appendChild(doc.createTextNode(String.valueOf(filterIgnoreAsyncWorldEdit)));
+        filters.appendChild(ignoreAsyncWorldEdit);
+        
+        return filters;
+    }
+    
+    public void filtersFromXML(Document doc)
+    {
+        Element filters = (Element)doc.getElementsByTagName("filters").item(0);
+        filterIgnorePreprocessCommands = Boolean.valueOf(filters.getElementsByTagName("ignorePreprocessCommands").item(0).getTextContent());
+        filterIgnoreServerCommands = Boolean.valueOf(filters.getElementsByTagName("ignoreServerCommands").item(0).getTextContent());
+        filterShowChatOnly = Boolean.valueOf(filters.getElementsByTagName("showChatOnly").item(0).getTextContent());
+        filterIgnoreWarnings = Boolean.valueOf(filters.getElementsByTagName("ignoreWarnings").item(0).getTextContent());
+        filterIgnoreErrors = Boolean.valueOf(filters.getElementsByTagName("ignoreErrors").item(0).getTextContent());
+        filterShowAdminChatOnly = Boolean.valueOf(filters.getElementsByTagName("showAdminChatOnly").item(0).getTextContent());
+        filterIgnoreAsyncWorldEdit = Boolean.valueOf(filters.getElementsByTagName("ignoreAsyncWorldEdit").item(0).getTextContent());
     }
 
     private boolean loadXML(final File file)
@@ -163,6 +218,9 @@ public class BTC_ConfigLoader
                 System.out.println("Error favorite buttons.");
                 hadErrors = true;
             }
+            
+            loadThemeSettings(doc);
+            filtersFromXML(doc);
         }
         catch (IOException | ParserConfigurationException | SAXException ex)
         {
@@ -172,6 +230,16 @@ public class BTC_ConfigLoader
         }
 
         return hadErrors;
+    }
+    
+    private void loadThemeSettings(Document doc)
+    {
+        Element theme = (Element)doc.getElementsByTagName("theme").item(0);
+        themes.lastSelectedTheme = theme.getElementsByTagName("lastSelectedTheme").item(0).getTextContent();
+        themes.customThemePath = theme.getElementsByTagName("customThemePath").item(0).getTextContent();
+        themes.useCustomTheme = Boolean.valueOf(theme.getElementsByTagName("useCustomTheme").item(0).getTextContent());
+        themes.darkTheme = Boolean.valueOf(theme.getElementsByTagName("darkTheme").item(0).getTextContent());
+        themes.customThemeDarkTheme = Boolean.valueOf(theme.getElementsByTagName("customThemeDarkTheme").item(0).getTextContent());
     }
 
     private static boolean extractFileFromJar(final String resourceName, final String fileName)

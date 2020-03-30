@@ -28,13 +28,20 @@ public class BTC_ConsoleMessage
     public BTC_ConsoleMessage(final String message)
     {
         this.message = message;
-        this.color = Color.BLACK;
+        if (!BukkitTelnetClient.themes.darkTheme)
+        {
+            this.color = Color.BLACK;
+        }
+        else
+        {
+            this.color = Color.WHITE;
+        }
     }
 
-    public BTC_ConsoleMessage(final String message, final Color color)
+    public BTC_ConsoleMessage(final String message, Color color)
     {
         this.message = message;
-        this.color = color;
+        this.color = BukkitTelnetClient.themes.checkColor(color);
     }
 
     public String getMessage()

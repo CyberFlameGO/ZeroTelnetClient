@@ -48,10 +48,11 @@ public class BTC_FavoriteButtonsPanel extends JPanel
             button.addActionListener(actionListener);
 
             GridBagConstraints gridBagConstraints = new GridBagConstraints();
+            gridBagConstraints.gridwidth = java.awt.GridBagConstraints.RELATIVE;
+            gridBagConstraints.weightx = 1.0;
             gridBagConstraints.gridx = x;
             gridBagConstraints.gridy = y;
             gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-            gridBagConstraints.ipadx = 1;
             gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTH;
             gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
             add(button, gridBagConstraints);
